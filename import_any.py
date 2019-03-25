@@ -134,6 +134,28 @@ def get_data(filename, cmd):
             rec['TTLs'] = [float_to_int(v) for v in rec['TTLs'] if v]
         if 'suppress_for' in rec:
             rec['suppress_for'] = float_to_int(rec['suppress_for'])
+        if 'certificate.version' in rec:
+            rec['version'] = rec.pop('certificate.version')
+            rec['serial'] = rec.pop('certificate.serial')
+            rec['subject'] = rec.pop('certificate.subject')
+            rec['issuer'] = rec.pop('certificate.issuer')
+            rec['not_valid_before'] = rec.pop('certificate.not_valid_before')
+            rec['not_valid_after'] = rec.pop('certificate.not_valid_after')
+            rec['key_alg'] = rec.pop('certificate.key_alg')
+            rec['sig_alg'] = rec.pop('certificate.sig_alg')
+            rec['key_type'] = rec.pop('certificate.key_type')
+            rec['key_length'] = rec.pop('certificate.key_length')
+            rec['exponent'] = rec.pop('certificate.exponent')
+            rec['curve'] = rec.pop('certificate.curve')
+        if 'san.dns' in rec:
+            rec['dns'] = rec.pop('san.dns')
+            rec['uri'] = rec.pop('san.uri')
+            rec['email'] = rec.pop('san.email')
+            rec['ip'] = rec.pop('san.ip')
+        if 'basic_constraints.ca' in rec:
+            rec['ca'] = rec.pop('basic_constraints.ca')
+            rec['path_len'] = rec.pop('basic_constraints.path_len')
+
         yield rec
 
 done = Seen("clickhouse.imported")
