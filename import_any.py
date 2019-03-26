@@ -139,14 +139,17 @@ def get_data(filename, cmd):
             rec['serial'] = rec.pop('certificate.serial')
             rec['subject'] = rec.pop('certificate.subject')
             rec['issuer'] = rec.pop('certificate.issuer')
-            rec['not_valid_before'] = rec.pop('certificate.not_valid_before')
-            rec['not_valid_after'] = rec.pop('certificate.not_valid_after')
             rec['key_alg'] = rec.pop('certificate.key_alg')
             rec['sig_alg'] = rec.pop('certificate.sig_alg')
             rec['key_type'] = rec.pop('certificate.key_type')
             rec['key_length'] = rec.pop('certificate.key_length')
             rec['exponent'] = rec.pop('certificate.exponent')
+        if 'certificate.curve' in rec:
             rec['curve'] = rec.pop('certificate.curve')
+        if 'certificate.not_valid_before' in rec:
+            rec['not_valid_before'] = rec.pop('certificate.not_valid_before').split(".")[0]
+        if 'certificate.not_valid_after' in rec:
+            rec['not_valid_after'] = rec.pop('certificate.not_valid_after').split(".")[0]
         if 'san.dns' in rec:
             rec['dns'] = rec.pop('san.dns')
             rec['uri'] = rec.pop('san.uri')
@@ -154,14 +157,17 @@ def get_data(filename, cmd):
             rec['ip'] = rec.pop('san.ip')
         if 'basic_constraints.ca' in rec:
             rec['ca'] = rec.pop('basic_constraints.ca')
+        if 'basic_constraints.path_len' in rec:
             rec['path_len'] = rec.pop('basic_constraints.path_len')
 
         yield rec
 
 done = Seen("clickhouse.imported")
 
-def do_import(filename, table, endpoint, cmd, force):
-    query="INSERT INTO {} FORMAT JSONEachRow".format(table)
+def do_import(filename, table, endpoint, cmd, force, db_name):
+    if db_name != "":
+        db_name = db_name + "."
+    query="INSERT INTO {}{} FORMAT JSONEachRow".format(db_name, table)
     data = get_data(filename, cmd)
     print(filename, end="")
     for i, block in enumerate(chunk(data, 50000)):
@@ -171,7 +177,10 @@ def do_import(filename, table, endpoint, cmd, force):
             continue
         blob = "\n".join(dumps(d) for d in block) + "\n"
         r = requests.post(endpoint, params=dict(query=query,input_format_skip_unknown_fields="1"), data=blob)
-        r.raise_for_status()
+        try:
+            r.raise_for_status()
+        except requests.exceptions.HTTPError as exc:
+            raise Exception(r.text) from exc
         done.mark_seen(block_id)
         sys.stdout.write("#")
         sys.stdout.flush()
@@ -190,6 +199,8 @@ def get_arguments():
         dest='cmd', help='command to extract logs (default: zcat)')
     parser.add_argument('-e', metavar='ENDPOINT', type=str, default='http://localhost:8123',
         dest='endpoint', help='database endpoint (default: http://localhost:8123)')
+    parser.add_argument('-d', metavar='DATABASE_NAME', type=str, default='',
+        dest='db_name', help='database name')
     return parser.parse_args()
 
 def main():
@@ -199,7 +210,7 @@ def main():
         if not args.force and done.has_seen(f):
             print(f + ' already done')
             continue
-        do_import(f, args.table, args.endpoint, args.cmd, args.force)
+        do_import(f, args.table, args.endpoint, args.cmd, args.force, args.db_name)
         done.mark_seen(f)
 
 if __name__ == "__main__":
