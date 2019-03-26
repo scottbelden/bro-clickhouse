@@ -143,6 +143,7 @@ def get_data(filename, cmd):
             rec['sig_alg'] = rec.pop('certificate.sig_alg')
             rec['key_type'] = rec.pop('certificate.key_type')
             rec['key_length'] = rec.pop('certificate.key_length')
+        if 'certificate.exponent' in rec:
             rec['exponent'] = rec.pop('certificate.exponent')
         if 'certificate.curve' in rec:
             rec['curve'] = rec.pop('certificate.curve')
