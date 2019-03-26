@@ -138,11 +138,12 @@ def get_data(filename, cmd):
         if 'certificate.version' in rec:
             rec['version'] = rec.pop('certificate.version')
             rec['serial'] = rec.pop('certificate.serial')
-            rec['issuer'] = rec.pop('certificate.issuer')
             rec['key_alg'] = rec.pop('certificate.key_alg')
             rec['sig_alg'] = rec.pop('certificate.sig_alg')
             rec['key_type'] = rec.pop('certificate.key_type')
             rec['key_length'] = rec.pop('certificate.key_length')
+        if 'certificate.issuer' in rec:
+            rec['issuer'] = rec.pop('certificate.issuer')
         if 'certificate.subject' in rec:
             rec['subject'] = rec.pop('certificate.subject')
         if 'certificate.exponent' in rec:
