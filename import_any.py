@@ -152,8 +152,11 @@ def get_data(filename, cmd):
             rec['not_valid_after'] = rec.pop('certificate.not_valid_after').split(".")[0]
         if 'san.dns' in rec:
             rec['dns'] = rec.pop('san.dns')
+        if 'san.uri' in rec:
             rec['uri'] = rec.pop('san.uri')
+        if 'san.email' in rec:
             rec['email'] = rec.pop('san.email')
+        if 'san.ip' in rec:
             rec['ip'] = rec.pop('san.ip')
         if 'basic_constraints.ca' in rec:
             rec['ca'] = rec.pop('basic_constraints.ca')
